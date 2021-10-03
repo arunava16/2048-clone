@@ -64,7 +64,7 @@ class GameBoardViewModel : ViewModel() {
     fun moveLeft() {
         board.forEachIndexed { index, row ->
 
-            // Shift to left
+            // Filter out non-zero items
             val newRow = row.filter { it != 0 }.toMutableList()
 
             // Merge items
@@ -77,7 +77,7 @@ class GameBoardViewModel : ViewModel() {
                 counter++
             }
 
-            // Fill remaining spaces with 0
+            // Fill remaining spaces with 0 at end
             while (newRow.size < 4) {
                 newRow.add(0)
             }
@@ -90,12 +90,37 @@ class GameBoardViewModel : ViewModel() {
         notifyUiToUpdate()
     }
 
-    private fun notifyUiToUpdate() {
-        _boardLiveData.value = board
+    fun moveRight() {
+        board.forEachIndexed { index, row ->
+
+            // Filter out non-zero items
+            val newRow = row.filter { it != 0 }.toMutableList()
+
+            // Merge items
+            var counter = newRow.size - 1
+            while (counter > 0) {
+                if (newRow[counter] == newRow[counter -1]) {
+                    newRow[counter] = newRow[counter] + newRow[counter - 1]
+                    newRow.removeAt(counter - 1)
+                }
+                counter--
+            }
+
+            // Fill remaining spaces with 0 at front
+            while (newRow.size < 4) {
+                newRow.add(0, 0)
+            }
+
+            board[index] = newRow.toIntArray()
+        }
+
+        populateRandomSlot()
+
+        notifyUiToUpdate()
     }
 
-    fun moveRight() {
-
+    private fun notifyUiToUpdate() {
+        _boardLiveData.value = board
     }
 
     private fun populateRandomSlot() {
