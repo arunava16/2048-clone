@@ -114,6 +114,7 @@ data class Slot(var value: Int = 0) {
     private fun getBackground(context: Context, value: Int): Drawable? {
         return ContextCompat.getDrawable(
             context, when (value) {
+                0 -> R.drawable.slot_background_default
                 2 -> R.drawable.slot_background_2
                 4 -> R.drawable.slot_background_4
                 8 -> R.drawable.slot_background_8
@@ -124,8 +125,7 @@ data class Slot(var value: Int = 0) {
                 256 -> R.drawable.slot_background_256
                 512 -> R.drawable.slot_background_512
                 1024 -> R.drawable.slot_background_1024
-                2048 -> R.drawable.slot_background_2048
-                else -> R.drawable.slot_background_default
+                else -> R.drawable.slot_background_2048
             }
         )
     }
