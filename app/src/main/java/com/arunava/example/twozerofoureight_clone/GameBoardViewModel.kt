@@ -42,33 +42,14 @@ class GameBoardViewModel : ViewModel() {
         board.rotateAntiClockwise()
 
         // Do left slide
-        board.forEachIndexed { index, row ->
-            // Filter out non-zero items
-            val newRow = row.filter { it != 0 }.toMutableList()
-
-            // Merge items
-            var counter = 0
-            while (counter < newRow.size - 1) {
-                if (newRow[counter] == newRow[counter + 1]) {
-                    newRow[counter] = newRow[counter] + newRow[counter + 1]
-                    newRow.removeAt(counter + 1)
-                }
-                counter++
-            }
-
-            // Fill remaining spaces with 0 at end
-            while (newRow.size < 4) {
-                newRow.add(0)
-            }
-            board[index] = newRow.toIntArray()
-        }
+        board.slideItemsLeft()
 
         // Rotate back clockwise
         board.rotateClockwise()
 
         populateRandomSlot()
 
-        notifyUiToUpdate()
+        _boardLiveData.value = board
     }
 
     fun moveDown() {
@@ -76,94 +57,36 @@ class GameBoardViewModel : ViewModel() {
         board.rotateClockwise()
 
         // Do left slide
-        board.forEachIndexed { index, row ->
-            // Filter out non-zero items
-            val newRow = row.filter { it != 0 }.toMutableList()
-
-            // Merge items
-            var counter = 0
-            while (counter < newRow.size - 1) {
-                if (newRow[counter] == newRow[counter + 1]) {
-                    newRow[counter] = newRow[counter] + newRow[counter + 1]
-                    newRow.removeAt(counter + 1)
-                }
-                counter++
-            }
-
-            // Fill remaining spaces with 0 at end
-            while (newRow.size < 4) {
-                newRow.add(0)
-            }
-            board[index] = newRow.toIntArray()
-        }
+        board.slideItemsLeft()
 
         // Rotate back clockwise
         board.rotateAntiClockwise()
 
         populateRandomSlot()
 
-        notifyUiToUpdate()
+        _boardLiveData.value = board
     }
 
     fun moveLeft() {
-        board.forEachIndexed { index, row ->
-
-            // Filter out non-zero items
-            val newRow = row.filter { it != 0 }.toMutableList()
-
-            // Merge items
-            var counter = 0
-            while (counter < newRow.size - 1) {
-                if (newRow[counter] == newRow[counter + 1]) {
-                    newRow[counter] = newRow[counter] + newRow[counter + 1]
-                    newRow.removeAt(counter + 1)
-                }
-                counter++
-            }
-
-            // Fill remaining spaces with 0 at end
-            while (newRow.size < 4) {
-                newRow.add(0)
-            }
-
-            board[index] = newRow.toIntArray()
-        }
+        board.slideItemsLeft()
 
         populateRandomSlot()
 
-        notifyUiToUpdate()
+        _boardLiveData.value = board
     }
 
     fun moveRight() {
-        board.forEachIndexed { index, row ->
+        // Swap columns
+        board.forEach { it.reverse() }
 
-            // Filter out non-zero items
-            val newRow = row.filter { it != 0 }.toMutableList()
+        // Do left slide
+        board.slideItemsLeft()
 
-            // Merge items
-            var counter = newRow.size - 1
-            while (counter > 0) {
-                if (newRow[counter] == newRow[counter - 1]) {
-                    newRow[counter] = newRow[counter] + newRow[counter - 1]
-                    newRow.removeAt(counter - 1)
-                }
-                counter--
-            }
-
-            // Fill remaining spaces with 0 at front
-            while (newRow.size < 4) {
-                newRow.add(0, 0)
-            }
-
-            board[index] = newRow.toIntArray()
-        }
+        // Swap columns again
+        board.forEach { it.reverse() }
 
         populateRandomSlot()
 
-        notifyUiToUpdate()
-    }
-
-    private fun notifyUiToUpdate() {
         _boardLiveData.value = board
     }
 
@@ -189,6 +112,32 @@ class GameBoardViewModel : ViewModel() {
             }
         }
         return emptySpaces
+    }
+
+    private fun Array<IntArray>.slideItemsLeft() {
+        forEachIndexed { index, row ->
+
+            // Filter out non-zero items
+            val newRow = row.filter { it != 0 }.toMutableList()
+
+            // Merge items
+            var counter = 0
+            while (counter < newRow.size - 1) {
+                if (newRow[counter] == newRow[counter + 1]) {
+                    newRow[counter] = newRow[counter] + newRow[counter + 1]
+                    newRow.removeAt(counter + 1)
+                }
+                counter++
+            }
+
+            // Fill remaining spaces with 0 at end
+            while (newRow.size < 4) {
+                newRow.add(0)
+            }
+
+            // Update it in matrix
+            this[index] = newRow.toIntArray()
+        }
     }
 
     private fun Array<IntArray>.rotateAntiClockwise() {
