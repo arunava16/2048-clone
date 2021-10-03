@@ -1,16 +1,31 @@
 package com.arunava.example.twozerofoureight_clone
 
+import android.content.SharedPreferences
+import androidx.core.content.edit
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-class GameBoardViewModel : ViewModel() {
+class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel() {
 
-    // Triple of rowId, columnId, data as live data
+    // Matrix of slots as live data
     private val _boardLiveData by lazy { MutableLiveData<Array<Array<Slot>>>() }
     val boardLiveData: LiveData<Array<Array<Slot>>> by lazy { _boardLiveData }
 
+    // Best score as live data
+    private val _bestScoreLiveData by lazy { MutableLiveData<Int>() }
+    val bestScoreLiveData: LiveData<Int> by lazy { _bestScoreLiveData }
+
+    // Current score as live data
+    private val _scoreLiveData by lazy { MutableLiveData<Int>() }
+    val scoreLiveData: LiveData<Int> by lazy { _scoreLiveData }
+
+    // Board matrix
     private val board = Array(4) { Array(4) { Slot() } }
+
+    // Scores
+    private var score = 0
+    private var bestScore = sharedPrefs.getInt("best_score", 0)
 
     fun initBoard() {
         val emptySlots = board.findEmptySlots()
@@ -30,6 +45,8 @@ class GameBoardViewModel : ViewModel() {
 
         // Update UI
         _boardLiveData.value = board
+        _scoreLiveData.value = score
+        _bestScoreLiveData.value = bestScore
     }
 
     fun moveUp() {
@@ -37,7 +54,7 @@ class GameBoardViewModel : ViewModel() {
         board.rotateAntiClockwise()
 
         // Do left slide
-        board.slideItemsLeft()
+        val currentMoveScore = board.slideItemsLeft()
 
         // Rotate back clockwise
         board.rotateClockwise()
@@ -45,6 +62,8 @@ class GameBoardViewModel : ViewModel() {
         populateRandomSlot()
 
         _boardLiveData.value = board
+
+        updateScore(currentMoveScore)
     }
 
     fun moveDown() {
@@ -52,7 +71,7 @@ class GameBoardViewModel : ViewModel() {
         board.rotateClockwise()
 
         // Do left slide
-        board.slideItemsLeft()
+        val currentMoveScore = board.slideItemsLeft()
 
         // Rotate back clockwise
         board.rotateAntiClockwise()
@@ -60,14 +79,18 @@ class GameBoardViewModel : ViewModel() {
         populateRandomSlot()
 
         _boardLiveData.value = board
+
+        updateScore(currentMoveScore)
     }
 
     fun moveLeft() {
-        board.slideItemsLeft()
+        val currentMoveScore = board.slideItemsLeft()
 
         populateRandomSlot()
 
         _boardLiveData.value = board
+
+        updateScore(currentMoveScore)
     }
 
     fun moveRight() {
@@ -75,7 +98,7 @@ class GameBoardViewModel : ViewModel() {
         board.forEach { it.reverse() }
 
         // Do left slide
-        board.slideItemsLeft()
+        val currentMoveScore = board.slideItemsLeft()
 
         // Swap columns again
         board.forEach { it.reverse() }
@@ -83,6 +106,20 @@ class GameBoardViewModel : ViewModel() {
         populateRandomSlot()
 
         _boardLiveData.value = board
+
+        updateScore(currentMoveScore)
+    }
+
+    private fun updateScore(currentMoveScore: Int) {
+        score += currentMoveScore
+        _scoreLiveData.value = currentMoveScore
+        if (score > bestScore) {
+            bestScore = currentMoveScore
+            _bestScoreLiveData.value = bestScore
+            sharedPrefs.edit {
+                putInt("best_score", bestScore)
+            }
+        }
     }
 
     private fun populateRandomSlot() {
@@ -109,7 +146,13 @@ class GameBoardViewModel : ViewModel() {
         return emptySpaces
     }
 
-    private fun Array<Array<Slot>>.slideItemsLeft() {
+    /**
+     * Slides items to the left.
+     * Merges the slots of same value.
+     * Returns the score in this slide.
+     */
+    private fun Array<Array<Slot>>.slideItemsLeft(): Int {
+        var score = 0
         forEachIndexed { index, row ->
 
             // Filter out non-zero items
@@ -120,6 +163,7 @@ class GameBoardViewModel : ViewModel() {
             while (counter < newRow.size - 1) {
                 if (newRow[counter] == newRow[counter + 1]) {
                     newRow[counter].value = newRow[counter].value + newRow[counter + 1].value
+                    score += newRow[counter].value
                     newRow.removeAt(counter + 1)
                 }
                 counter++
@@ -133,6 +177,7 @@ class GameBoardViewModel : ViewModel() {
             // Update it in matrix
             this[index] = newRow.toTypedArray()
         }
+        return score
     }
 
     private fun Array<Array<Slot>>.rotateAntiClockwise() {

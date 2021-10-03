@@ -7,6 +7,31 @@
     android:padding="8dp"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/score"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toStartOf="@id/best"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Score: " />
+
+    <TextView
+        android:id="@+id/best"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/score"
+        app:layout_constraintTop_toBottomOf="@id/score"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Best: " />
+
     <!--Row 1-->
     <TextView
         android:id="@+id/zero_zero"
@@ -20,7 +45,7 @@
         app:layout_constraintDimensionRatio="1"
         app:layout_constraintEnd_toStartOf="@id/zero_one"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/score" />
 
     <TextView
         android:id="@+id/zero_one"
@@ -34,7 +59,7 @@
         app:layout_constraintDimensionRatio="1"
         app:layout_constraintEnd_toStartOf="@id/zero_two"
         app:layout_constraintStart_toEndOf="@id/zero_zero"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/score" />
 
     <TextView
         android:id="@+id/zero_two"
@@ -48,7 +73,7 @@
         app:layout_constraintDimensionRatio="1"
         app:layout_constraintEnd_toStartOf="@id/zero_three"
         app:layout_constraintStart_toEndOf="@id/zero_one"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/score" />
 
     <TextView
         android:id="@+id/zero_three"
@@ -62,7 +87,7 @@
         app:layout_constraintDimensionRatio="1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/zero_two"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/score" />
 
     <!--Row 2-->
     <TextView
