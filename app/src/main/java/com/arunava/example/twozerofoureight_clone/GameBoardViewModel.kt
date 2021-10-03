@@ -18,7 +18,7 @@ class GameBoardViewModel : ViewModel() {
     )
 
     fun initBoard() {
-        val spaces = board.computeEmptySpaces()
+        val spaces = board.findEmptySpaces()
 
         // Pick 1st random
         val item1 = spaces.random()
@@ -37,28 +37,72 @@ class GameBoardViewModel : ViewModel() {
         _boardLiveData.value = board
     }
 
-    private fun Array<IntArray>.computeEmptySpaces(): ArrayList<Pair<Int, Int>> {
-        val emptySpaces = ArrayList<Pair<Int, Int>>()
-        forEachIndexed { i, row ->
-            row.forEachIndexed { j, item ->
-                if (item == 0) {
-                    emptySpaces.add(Pair(i, j))
-                }
-            }
-        }
-        return emptySpaces
-    }
-
-    private fun randomTwoOrFour(): Int {
-        return listOf(2, 4).random()
-    }
-
     fun moveUp() {
+        // Rotate anti-clockwise
+        board.rotateAntiClockwise()
 
+        // Do left slide
+        board.forEachIndexed { index, row ->
+            // Filter out non-zero items
+            val newRow = row.filter { it != 0 }.toMutableList()
+
+            // Merge items
+            var counter = 0
+            while (counter < newRow.size - 1) {
+                if (newRow[counter] == newRow[counter + 1]) {
+                    newRow[counter] = newRow[counter] + newRow[counter + 1]
+                    newRow.removeAt(counter + 1)
+                }
+                counter++
+            }
+
+            // Fill remaining spaces with 0 at end
+            while (newRow.size < 4) {
+                newRow.add(0)
+            }
+            board[index] = newRow.toIntArray()
+        }
+
+        // Rotate back clockwise
+        board.rotateClockwise()
+
+        populateRandomSlot()
+
+        notifyUiToUpdate()
     }
 
     fun moveDown() {
+        // Rotate anti-clockwise
+        board.rotateClockwise()
 
+        // Do left slide
+        board.forEachIndexed { index, row ->
+            // Filter out non-zero items
+            val newRow = row.filter { it != 0 }.toMutableList()
+
+            // Merge items
+            var counter = 0
+            while (counter < newRow.size - 1) {
+                if (newRow[counter] == newRow[counter + 1]) {
+                    newRow[counter] = newRow[counter] + newRow[counter + 1]
+                    newRow.removeAt(counter + 1)
+                }
+                counter++
+            }
+
+            // Fill remaining spaces with 0 at end
+            while (newRow.size < 4) {
+                newRow.add(0)
+            }
+            board[index] = newRow.toIntArray()
+        }
+
+        // Rotate back clockwise
+        board.rotateAntiClockwise()
+
+        populateRandomSlot()
+
+        notifyUiToUpdate()
     }
 
     fun moveLeft() {
@@ -99,7 +143,7 @@ class GameBoardViewModel : ViewModel() {
             // Merge items
             var counter = newRow.size - 1
             while (counter > 0) {
-                if (newRow[counter] == newRow[counter -1]) {
+                if (newRow[counter] == newRow[counter - 1]) {
                     newRow[counter] = newRow[counter] + newRow[counter - 1]
                     newRow.removeAt(counter - 1)
                 }
@@ -124,10 +168,58 @@ class GameBoardViewModel : ViewModel() {
     }
 
     private fun populateRandomSlot() {
-        val emptySlots = board.computeEmptySpaces()
+        val emptySlots = board.findEmptySpaces()
 
         val randomSlot = emptySlots.random()
 
         board[randomSlot.first][randomSlot.second] = randomTwoOrFour()
+    }
+
+    private fun randomTwoOrFour(): Int {
+        return listOf(2, 4).random()
+    }
+
+    private fun Array<IntArray>.findEmptySpaces(): ArrayList<Pair<Int, Int>> {
+        val emptySpaces = ArrayList<Pair<Int, Int>>()
+        forEachIndexed { i, row ->
+            row.forEachIndexed { j, item ->
+                if (item == 0) {
+                    emptySpaces.add(Pair(i, j))
+                }
+            }
+        }
+        return emptySpaces
+    }
+
+    private fun Array<IntArray>.rotateAntiClockwise() {
+        // Transpose
+        for (i in indices) {
+            for (j in 0..i) {
+                if (i != j) {
+                    val temp = this[i][j]
+                    this[i][j] = this[j][i]
+                    this[j][i] = temp
+                }
+            }
+        }
+
+        // Swap the rows
+        reverse()
+    }
+
+    private fun Array<IntArray>.rotateClockwise() {
+        // Transpose
+        for (i in indices) {
+            for (j in 0..i) {
+                if (i != j) {
+                    val temp = this[i][j]
+                    this[i][j] = this[j][i]
+                    this[j][i] = temp
+                }
+            }
+        }
+
+        // Swap the columns
+        forEach { it.reverse() }
     }
 }
