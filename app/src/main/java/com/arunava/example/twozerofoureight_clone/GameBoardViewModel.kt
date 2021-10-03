@@ -50,11 +50,15 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
     }
 
     fun moveUp() {
+        if (!canSlideUp()) {
+            return
+        }
+
         // Rotate anti-clockwise
         board.rotateAntiClockwise()
 
         // Do left slide
-        val currentMoveScore = board.slideItemsLeft()
+        val currentMoveScore = board.slideLeft()
 
         // Rotate back clockwise
         board.rotateClockwise()
@@ -64,14 +68,29 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         _boardLiveData.value = board
 
         updateScore(currentMoveScore)
+    }
+
+    private fun canSlideUp(): Boolean {
+        board.rotateAntiClockwise()
+        return if (board.canSlideLeft()) {
+            board.rotateClockwise()
+            true
+        } else {
+            board.rotateClockwise()
+            false
+        }
     }
 
     fun moveDown() {
+        if (!canSlideDown()) {
+            return
+        }
+
         // Rotate anti-clockwise
         board.rotateClockwise()
 
         // Do left slide
-        val currentMoveScore = board.slideItemsLeft()
+        val currentMoveScore = board.slideLeft()
 
         // Rotate back clockwise
         board.rotateAntiClockwise()
@@ -83,8 +102,23 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         updateScore(currentMoveScore)
     }
 
+    private fun canSlideDown(): Boolean {
+        board.rotateClockwise()
+        return if (board.canSlideLeft()) {
+            board.rotateAntiClockwise()
+            true
+        } else {
+            board.rotateAntiClockwise()
+            false
+        }
+    }
+
     fun moveLeft() {
-        val currentMoveScore = board.slideItemsLeft()
+        if (!board.canSlideLeft()) {
+            return
+        }
+
+        val currentMoveScore = board.slideLeft()
 
         populateRandomSlot()
 
@@ -94,20 +128,35 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
     }
 
     fun moveRight() {
+        if (!canSlideRight()) {
+            return
+        }
+
         // Swap columns
-        board.forEach { it.reverse() }
+        board.reverseColumns()
 
         // Do left slide
-        val currentMoveScore = board.slideItemsLeft()
+        val currentMoveScore = board.slideLeft()
 
         // Swap columns again
-        board.forEach { it.reverse() }
+        board.reverseColumns()
 
         populateRandomSlot()
 
         _boardLiveData.value = board
 
         updateScore(currentMoveScore)
+    }
+
+    private fun canSlideRight(): Boolean {
+        board.reverseColumns()
+        return if (board.canSlideLeft()) {
+            board.reverseColumns()
+            true
+        } else {
+            board.reverseColumns()
+            false
+        }
     }
 
     private fun updateScore(currentMoveScore: Int) {
@@ -151,7 +200,7 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
      * Merges the slots of same value.
      * Returns the score in this slide.
      */
-    private fun Array<Array<Slot>>.slideItemsLeft(): Int {
+    private fun Array<Array<Slot>>.slideLeft(): Int {
         var score = 0
         forEachIndexed { index, row ->
 
@@ -178,6 +227,22 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
             this[index] = newRow.toTypedArray()
         }
         return score
+    }
+
+    /**
+     * Creates a copy of the board and slides it left to check if resultant board and original board are same
+     */
+    private fun Array<Array<Slot>>.canSlideLeft(): Boolean {
+        val duplicateBoard = Array(4) { Array(4) { Slot() } }
+        forEachIndexed { i, row ->
+            row.forEachIndexed { j, slot ->
+                duplicateBoard[i][j].value = slot.value
+            }
+        }
+
+        duplicateBoard.slideLeft()
+
+        return !this.contentDeepEquals(duplicateBoard)
     }
 
     private fun Array<Array<Slot>>.rotateAntiClockwise() {
@@ -209,6 +274,10 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         }
 
         // Swap the columns
+        reverseColumns()
+    }
+
+    private fun Array<Array<Slot>>.reverseColumns() {
         forEach { it.reverse() }
     }
 }
