@@ -20,12 +20,22 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
     private val _scoreLiveData by lazy { MutableLiveData<Int>() }
     val scoreLiveData: LiveData<Int> by lazy { _scoreLiveData }
 
+    // Game Won
+    private val _gameWonLiveData by lazy { MutableLiveData<Boolean>() }
+    val gameWonLiveData: LiveData<Boolean> by lazy { _gameWonLiveData }
+
+    // Game Over
+    private val _gameOver by lazy { MutableLiveData<Boolean>() }
+    val gameOver: LiveData<Boolean> by lazy { _gameOver }
+
     // Board matrix
     private val board = Array(4) { Array(4) { Slot() } }
 
     // Scores
     private var score = 0
     private var bestScore = sharedPrefs.getInt("best_score", 0)
+
+    private var gameWon = false
 
     fun initBoard() {
         val emptySlots = board.findEmptySlots()
@@ -68,17 +78,10 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         _boardLiveData.value = board
 
         updateScore(currentMoveScore)
-    }
-
-    private fun canSlideUp(): Boolean {
-        board.rotateAntiClockwise()
-        return if (board.canSlideLeft()) {
-            board.rotateClockwise()
-            true
-        } else {
-            board.rotateClockwise()
-            false
+        if (!gameWon) {
+            checkWinSituation()
         }
+        checkGameOver()
     }
 
     fun moveDown() {
@@ -100,17 +103,10 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         _boardLiveData.value = board
 
         updateScore(currentMoveScore)
-    }
-
-    private fun canSlideDown(): Boolean {
-        board.rotateClockwise()
-        return if (board.canSlideLeft()) {
-            board.rotateAntiClockwise()
-            true
-        } else {
-            board.rotateAntiClockwise()
-            false
+        if (!gameWon) {
+            checkWinSituation()
         }
+        checkGameOver()
     }
 
     fun moveLeft() {
@@ -125,6 +121,10 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         _boardLiveData.value = board
 
         updateScore(currentMoveScore)
+        if (!gameWon) {
+            checkWinSituation()
+        }
+        checkGameOver()
     }
 
     fun moveRight() {
@@ -146,6 +146,32 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         _boardLiveData.value = board
 
         updateScore(currentMoveScore)
+        if (!gameWon) {
+            checkWinSituation()
+        }
+        checkGameOver()
+    }
+
+    private fun canSlideUp(): Boolean {
+        board.rotateAntiClockwise()
+        return if (board.canSlideLeft()) {
+            board.rotateClockwise()
+            true
+        } else {
+            board.rotateClockwise()
+            false
+        }
+    }
+
+    private fun canSlideDown(): Boolean {
+        board.rotateClockwise()
+        return if (board.canSlideLeft()) {
+            board.rotateAntiClockwise()
+            true
+        } else {
+            board.rotateAntiClockwise()
+            false
+        }
     }
 
     private fun canSlideRight(): Boolean {
@@ -168,6 +194,19 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
             sharedPrefs.edit {
                 putInt("best_score", bestScore)
             }
+        }
+    }
+
+    private fun checkWinSituation() {
+        if (board.flatten().stream().anyMatch { it.value == 2048 }) {
+            gameWon = true
+            _gameWonLiveData.value = true
+        }
+    }
+
+    private fun checkGameOver() {
+        if (!board.canSlideLeft() && !canSlideRight() && !canSlideUp() && !canSlideDown()) {
+            _gameOver.value = true
         }
     }
 
