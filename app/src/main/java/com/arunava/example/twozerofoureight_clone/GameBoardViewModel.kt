@@ -112,9 +112,9 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
 
     private fun updateScore(currentMoveScore: Int) {
         score += currentMoveScore
-        _scoreLiveData.value = currentMoveScore
+        _scoreLiveData.value = score
         if (score > bestScore) {
-            bestScore = currentMoveScore
+            bestScore = score
             _bestScoreLiveData.value = bestScore
             sharedPrefs.edit {
                 putInt("best_score", bestScore)
