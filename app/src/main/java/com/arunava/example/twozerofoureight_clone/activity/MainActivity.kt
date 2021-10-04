@@ -1,4 +1,4 @@
-package com.arunava.example.twozerofoureight_clone
+package com.arunava.example.twozerofoureight_clone.activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,13 +6,21 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.arunava.example.twozerofoureight_clone.data.Slot
 import com.arunava.example.twozerofoureight_clone.databinding.ActivityMainBinding
+import com.arunava.example.twozerofoureight_clone.util.AppConstants
+import com.arunava.example.twozerofoureight_clone.viewmodel.GameBoardViewModel
 
 class MainActivity : AppCompatActivity() {
 
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
-    private val sharedPrefs by lazy { getSharedPreferences("2048_clone", MODE_PRIVATE) }
+    private val sharedPrefs by lazy {
+        getSharedPreferences(
+            AppConstants.PREFS_FILE_NAME,
+            MODE_PRIVATE
+        )
+    }
 
     private val gameBoardViewModel by lazy {
         ViewModelProvider(this, object : ViewModelProvider.Factory {
@@ -64,6 +72,9 @@ class MainActivity : AppCompatActivity() {
         gameBoardViewModel.initBoard()
     }
 
+    /**
+     * Show game won dialog
+     */
     private fun showGameWon() {
         AlertDialog.Builder(this)
             .setCancelable(false)
@@ -75,6 +86,9 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * Show game over dialog
+     */
     private fun showGameOver() {
         AlertDialog.Builder(this)
             .setCancelable(false)

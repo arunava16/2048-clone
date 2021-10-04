@@ -1,12 +1,16 @@
-package com.arunava.example.twozerofoureight_clone
+package com.arunava.example.twozerofoureight_clone.data
 
 import android.content.Context
 import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
+import com.arunava.example.twozerofoureight_clone.R
 import com.arunava.example.twozerofoureight_clone.databinding.ActivityMainBinding
 
 data class Slot(var value: Int = 0) {
 
+    /**
+     * updates the slots in UI as per the coordinate
+     */
     fun update(binding: ActivityMainBinding, i: Int, j: Int) {
         when {
             i == 0 && j == 0 -> {
@@ -111,6 +115,9 @@ data class Slot(var value: Int = 0) {
         }
     }
 
+    /**
+     * Updates the background of the slots as per the value of each slot
+     */
     private fun getBackground(context: Context, value: Int): Drawable? {
         return ContextCompat.getDrawable(
             context, when (value) {

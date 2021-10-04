@@ -1,10 +1,12 @@
-package com.arunava.example.twozerofoureight_clone
+package com.arunava.example.twozerofoureight_clone.viewmodel
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.arunava.example.twozerofoureight_clone.data.Slot
+import com.arunava.example.twozerofoureight_clone.util.AppConstants
 
 class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel() {
 
@@ -20,11 +22,11 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
     private val _scoreLiveData by lazy { MutableLiveData<Int>() }
     val scoreLiveData: LiveData<Int> by lazy { _scoreLiveData }
 
-    // Game Won
+    // Game Won flag as live data
     private val _gameWonLiveData by lazy { MutableLiveData<Boolean>() }
     val gameWonLiveData: LiveData<Boolean> by lazy { _gameWonLiveData }
 
-    // Game Over
+    // Game Over flag as live data
     private val _gameOver by lazy { MutableLiveData<Boolean>() }
     val gameOver: LiveData<Boolean> by lazy { _gameOver }
 
@@ -33,10 +35,14 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
 
     // Scores
     private var score = 0
-    private var bestScore = sharedPrefs.getInt("best_score", 0)
+    private var bestScore = sharedPrefs.getInt(AppConstants.BEST_SCORE, 0)
 
     private var gameWon = false
 
+    /**
+     * Initialises the board
+     * Empty board with two random slots filled with 2
+     */
     fun initBoard() {
         val emptySlots = board.findEmptySlots()
 
@@ -59,56 +65,11 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         _bestScoreLiveData.value = bestScore
     }
 
-    fun moveUp() {
-        if (!canSlideUp()) {
-            return
-        }
-
-        // Rotate anti-clockwise
-        board.rotateAntiClockwise()
-
-        // Do left slide
-        val currentMoveScore = board.slideLeft()
-
-        // Rotate back clockwise
-        board.rotateClockwise()
-
-        populateRandomSlot()
-
-        _boardLiveData.value = board
-
-        updateScore(currentMoveScore)
-        if (!gameWon) {
-            checkWinSituation()
-        }
-        checkGameOver()
-    }
-
-    fun moveDown() {
-        if (!canSlideDown()) {
-            return
-        }
-
-        // Rotate anti-clockwise
-        board.rotateClockwise()
-
-        // Do left slide
-        val currentMoveScore = board.slideLeft()
-
-        // Rotate back clockwise
-        board.rotateAntiClockwise()
-
-        populateRandomSlot()
-
-        _boardLiveData.value = board
-
-        updateScore(currentMoveScore)
-        if (!gameWon) {
-            checkWinSituation()
-        }
-        checkGameOver()
-    }
-
+    /**
+     * Slide items to left action.
+     * Performs left slide of items if items can be slided left.
+     * Then updates board, scores and checks for win and game over situation.
+     */
     fun moveLeft() {
         if (!board.canSlideLeft()) {
             return
@@ -127,6 +88,11 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         checkGameOver()
     }
 
+    /**
+     * Slide items to right action.
+     * Performs right slide of items if items can be slided right.
+     * Then updates board, scores and checks for win and game over situation.
+     */
     fun moveRight() {
         if (!canSlideRight()) {
             return
@@ -152,28 +118,69 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         checkGameOver()
     }
 
-    private fun canSlideUp(): Boolean {
+    /**
+     * Slide items to up action.
+     * Performs up slide of items if items can be slided up.
+     * Then updates board, scores and checks for win and game over situation.
+     */
+    fun moveUp() {
+        if (!canSlideUp()) {
+            return
+        }
+
+        // Rotate anti-clockwise
         board.rotateAntiClockwise()
-        return if (board.canSlideLeft()) {
-            board.rotateClockwise()
-            true
-        } else {
-            board.rotateClockwise()
-            false
-        }
-    }
 
-    private fun canSlideDown(): Boolean {
+        // Do left slide
+        val currentMoveScore = board.slideLeft()
+
+        // Rotate back clockwise
         board.rotateClockwise()
-        return if (board.canSlideLeft()) {
-            board.rotateAntiClockwise()
-            true
-        } else {
-            board.rotateAntiClockwise()
-            false
+
+        populateRandomSlot()
+
+        _boardLiveData.value = board
+
+        updateScore(currentMoveScore)
+        if (!gameWon) {
+            checkWinSituation()
         }
+        checkGameOver()
     }
 
+    /**
+     * Slide items to down action.
+     * Performs down slide of items if items can be slided down.
+     * Then updates board, scores and checks for win and game over situation.
+     */
+    fun moveDown() {
+        if (!canSlideDown()) {
+            return
+        }
+
+        // Rotate anti-clockwise
+        board.rotateClockwise()
+
+        // Do left slide
+        val currentMoveScore = board.slideLeft()
+
+        // Rotate back clockwise
+        board.rotateAntiClockwise()
+
+        populateRandomSlot()
+
+        _boardLiveData.value = board
+
+        updateScore(currentMoveScore)
+        if (!gameWon) {
+            checkWinSituation()
+        }
+        checkGameOver()
+    }
+
+    /**
+     * Checks if items can be slide right
+     */
     private fun canSlideRight(): Boolean {
         board.reverseColumns()
         return if (board.canSlideLeft()) {
@@ -185,6 +192,37 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         }
     }
 
+    /**
+     * Checks if items can be slide up
+     */
+    private fun canSlideUp(): Boolean {
+        board.rotateAntiClockwise()
+        return if (board.canSlideLeft()) {
+            board.rotateClockwise()
+            true
+        } else {
+            board.rotateClockwise()
+            false
+        }
+    }
+
+    /**
+     * Checks if items can be slide down
+     */
+    private fun canSlideDown(): Boolean {
+        board.rotateClockwise()
+        return if (board.canSlideLeft()) {
+            board.rotateAntiClockwise()
+            true
+        } else {
+            board.rotateAntiClockwise()
+            false
+        }
+    }
+
+    /**
+     * Calculates the scores and notifies the UI
+     */
     private fun updateScore(currentMoveScore: Int) {
         score += currentMoveScore
         _scoreLiveData.value = score
@@ -192,11 +230,14 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
             bestScore = score
             _bestScoreLiveData.value = bestScore
             sharedPrefs.edit {
-                putInt("best_score", bestScore)
+                putInt(AppConstants.BEST_SCORE, bestScore)
             }
         }
     }
 
+    /**
+     * Checks for game won situation and notifies observers when condition is satisfied
+     */
     private fun checkWinSituation() {
         if (board.flatten().stream().anyMatch { it.value == 2048 }) {
             gameWon = true
@@ -204,12 +245,18 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         }
     }
 
+    /**
+     * Checks for game over and notifies observers when condition is satisfied
+     */
     private fun checkGameOver() {
         if (!board.canSlideLeft() && !canSlideRight() && !canSlideUp() && !canSlideDown()) {
             _gameOver.value = true
         }
     }
 
+    /**
+     * Finds a random empty slot and assigns a value of 2 or 4 to it.
+     */
     private fun populateRandomSlot() {
         val emptySlots = board.findEmptySlots()
 
@@ -218,10 +265,16 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         randomSlot.value = randomTwoOrFour()
     }
 
+    /**
+     * Generates a random 2 or 4 and returns that
+     */
     private fun randomTwoOrFour(): Int {
         return listOf(2, 4).random()
     }
 
+    /**
+     * Traverses matrix and returns an array containing all the empty slots
+     */
     private fun Array<Array<Slot>>.findEmptySlots(): ArrayList<Slot> {
         val emptySpaces = ArrayList<Slot>()
         forEach { row ->
@@ -269,7 +322,9 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
     }
 
     /**
-     * Creates a copy of the board and slides it left to check if resultant board and original board are same
+     * To check if a left slide operation will change the board or not.
+     * Creates a copy of the board and performs left slide operation on it.
+     * Then checks it's contents matches with the original board or not.
      */
     private fun Array<Array<Slot>>.canSlideLeft(): Boolean {
         val duplicateBoard = Array(4) { Array(4) { Slot() } }
@@ -284,6 +339,9 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         return !this.contentDeepEquals(duplicateBoard)
     }
 
+    /**
+     * Rotates the matrix anti-clockwise
+     */
     private fun Array<Array<Slot>>.rotateAntiClockwise() {
         // Transpose
         for (i in indices) {
@@ -300,6 +358,9 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         reverse()
     }
 
+    /**
+     * Rotates the matrix clockwise
+     */
     private fun Array<Array<Slot>>.rotateClockwise() {
         // Transpose
         for (i in indices) {
@@ -316,6 +377,9 @@ class GameBoardViewModel(private val sharedPrefs: SharedPreferences) : ViewModel
         reverseColumns()
     }
 
+    /**
+     * Reverses the matrix column wise
+     */
     private fun Array<Array<Slot>>.reverseColumns() {
         forEach { it.reverse() }
     }
